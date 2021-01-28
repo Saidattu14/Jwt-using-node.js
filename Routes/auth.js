@@ -1,43 +1,95 @@
 const router = require('express').Router()
 const User = require('../model/user');
-const joi_val = require('@hapi/joi')
-
-const schema_joi =  joi_val.object({
-   name : joi_val.string().min(8).required(),
-   password : joi_val.string().min(8).required(),
-   email : joi_val.string().email().required()
-})
-
-
+const register = require('../model/registerValidation')
+const bcrypt = require('bcryptjs')
+const jwt   = require('jsonwebtoken');
+require('dotenv').config();
 router.post('/register',async (req,res) => {
-   const {error} =  schema_joi.validate(req.body)
-   
+   const error = register.register_validation(req.body)
+
+  
    if (error == null)
    {
-
-   const data = new User({
-      name : req.body.name,
-      password : req.body.password,
-      email : req.body.email,
-   });
+      const salt = await  bcrypt.genSalt(10);
+      const hash_password = await bcrypt.hash(req.body.password, salt)
+      const data = new User({
+         name : req.body.name,
+         password : hash_password,
+         email : req.body.email,
+      });
    try{
-      const result = await data.save();
-      console.log(result)
-      res.send(result)
+      const find_unique_name = await User.findOne({name : req.body.name})
+      const find_unique_email = await User.findOne({name : req.body.email})
+      if (find_unique_name != null)
+      {
+         res.send("Name already exits");
+      }
+      else if( find_unique_email != null)
+      {
+         res.send("Email already exits");
+      }
+      else
+      {
+         const result = await data.save();
+         res.send(result);
+      }
    }
    catch(error)
    {
+      
       res.status(400).send(error);
    }
    }
    else
    {
       const message = error.details[0].message;
+     
       res.status(400).send(message);
 
    }
+})
+
+router.post('/login',async (req,res) => {
+   const error = register.register_validation(req.body)
+   if (error == null)
+   {
+   try{
+      const login = await User.findOne({name : req.body.name ,email : req.body.email})
+      
+      if (login == null)
+      {
+         res.send("User_name is incorrect");
+      }
+      else
+      {
+         const  valid_password = await bcrypt.compare(req.body.password , login.password)
+         if (!valid_password)
+         {
+            res.send("Password is Incorrect")
+         }
+         else
+         {
+            
+            const token = jwt.sign({_id : login._id}, "shuusnsnususnu")
+            res.header('auth-token',token).send(token);
+      
+         }
+      }
+   }
+   catch(error)
+   {
+      
+      res.status(400).send(error);
+   }
+   }
+   else
+   {
+
+      const message = error.details[0].message;
+      res.status(400).send(message);
 
 
+   }
 })
 
 
