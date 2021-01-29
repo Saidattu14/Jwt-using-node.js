@@ -19,7 +19,7 @@ router.post('/register',async (req,res) => {
       });
    try{
       const find_unique_name = await User.findOne({name : req.body.name})
-      const find_unique_email = await User.findOne({name : req.body.email})
+      const find_unique_email = await User.findOne({email : req.body.email})
       if (find_unique_name != null)
       {
          res.send("Name already exits");
@@ -31,7 +31,7 @@ router.post('/register',async (req,res) => {
       else
       {
          const result = await data.save();
-         res.send(result);
+         res.status(200).send("Registered Successfully");
       }
    }
    catch(error)

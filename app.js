@@ -15,4 +15,6 @@ app.use(bd.json())
 app.use('/api/user', auth);
 app.use('/api/post',post);
 
-app.listen(8008);
+app.listen(8021);
+
+module.exports = app; // for testing
