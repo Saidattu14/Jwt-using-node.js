@@ -54,11 +54,15 @@ router.post('/login',async (req,res) => {
    if (error == null)
    {
    try{
-      const login = await User.findOne({name : req.body.name ,email : req.body.email})
-      
+      const login = await User.findOne({name : req.body.name})
+      const email = await User.findOne({email : req.body.email})
       if (login == null)
       {
          res.send("User_name is incorrect");
+      }
+      else if(email  == null)
+      {
+         res.send("Email is incorrect");
       }
       else
       {
